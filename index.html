@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="three.js"></script>
+</head>
+
+<body>
+    <ul class="nav nav-tabs">
+        <li role="presentation" class="active"><a href="#">Home</a></li>
+        <li role="presentation"><a href="#">Profile</a></li>
+        <li role="presentation"><a href="#">Messages</a></li>
+    </ul>
+
+    <div class="container-fluid">
+        <canvas id="webglcanvas" width=640 height=480></canvas>
+    </div>
+
+</body>
+    <script>
+        
+        var canvas = document.getElementById("webglcanvas");
+        var renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 4000 );
+        
+        renderer.setSize(canvas.width, canvas.height);
+        scene.add(camera);
+        
+        //cube
+        var material = new THREE.MeshBasicMaterial();
+        var geometry = new THREE.CubeGeometry(2, 2, 2);
+        var cube = new THREE.Mesh(geometry, material);
+        cube.position.z = -8;
+        cube.rotation.x = Math.PI / 5;
+        cube.rotation.y = Math.PI / 5;
+        
+        scene.add( cube );
+        
+        
+        //func. run
+        function run() {
+        requestAnimationFrame(function() { run(); });
+			renderer.render( scene, camera );
+			animate();
+        }
+        //func. animate
+        function animate() {
+	
+	   }
+        run();
+    </script>
+    <script src="obj_loader.js"></script>
+    <script>
+        var readMesh = Module.cwrap('readMesh','number',['string']);
+        
+    </script>
+</html>
