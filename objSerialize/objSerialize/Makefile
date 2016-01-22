@@ -1,4 +1,4 @@
-FLAGS = -s EXPORTED_FUNCTIONS="['_readMesh']" -o /Users/yd/Desktop/ObjSerializer/obj_loader.js -s DEMANGLE_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file objData -O3 -s AGGRESSIVE_VARIABLE_ELIMINATION=1 -s PRECISE_F32=1
+FLAGS = -s EXPORTED_FUNCTIONS="['_readMeshFromUrl','_readMesh']" -o /Users/yd/Desktop/ObjSerializer/obj_loader.js -s DEMANGLE_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 -O3 -s AGGRESSIVE_VARIABLE_ELIMINATION=1 -s PRECISE_F32=1
 
 objSerializer: objSerializer.c
 	emcc objSerializer.c $(FLAGS)

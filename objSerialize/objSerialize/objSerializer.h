@@ -18,7 +18,10 @@
 
 //EM_ASM_ARGS({ my_js_fn($0, $1); }, i, max);
 
-float ** readMesh(char * filePath);
+void successLoadMeshFromUrl(char * file);
+void fail(char * file);
+int readMeshFromUrl(char * url, char * fileName);
+void readMesh(char * filePath);
 int readVector2Array16bit (float ** arr, FILE * fp, int arrLength);
 int readVector3Array16bit (float ** arr, FILE * fp, int arrLength);
 int readVector3ArrayBytes (float ** arr, FILE * fp, int arrLength);

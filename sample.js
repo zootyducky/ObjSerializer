@@ -1,6 +1,18 @@
 var readMesh = Module.cwrap('readMesh','number',['string']);
 readMesh('objData/yd.data');
 
+var readMeshFromUrl = Module.cwrap('readMeshFromUrl','number',['string','string']);
+
+var timeCheck = function(){
+    start_o = Date.now();
+    readMeshFromUrl('https://s3-ap-northeast-1.amazonaws.com/realityreflection/aaa/final.data','aaa');
+    
+}
+
+timeCheck();
+
+
+
 
   var renderer = null,
         scene = null,
@@ -54,9 +66,9 @@ readMesh('objData/yd.data');
 
             // Add  a camera so we can view the scene
             camera = new THREE.PerspectiveCamera(45, canvas.width / canvas.height, 1, 4000);
-            camera.position.x = 0;
+            camera.position.x = 1;
             camera.position.y = 1;
-            camera.position.z = 3;
+            camera.position.z = 1;
 
             scene.add(camera);
 
@@ -75,8 +87,8 @@ readMesh('objData/yd.data');
                 color: 0x00fff0
             });
             cubeMesh = new THREE.Mesh(cube, cubeMaterial);
-            scene.add(cubeMesh);
-            camera.lookAt(cubeMesh);
+//            scene.add(cubeMesh);
+//            camera.lookAt(cubeMesh);
 
             // Run the run loop
             run();

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="three.js"></script>
+</head>
+
+<body>
+    <ul class="nav nav-tabs">
+        <li role="presentation" class="active"><a href="#">Home</a></li>
+        <li role="presentation"><a href="#">Profile</a></li>
+        <li role="presentation"><a href="#">Messages</a></li>
+    </ul>
+
+    <div class="container-fluid">
+        <canvas id="webglcanvas" width=640 height=480></canvas>
+    </div>
+
+</body>
+    <script id="vertexShader" type="x-shader/x-vertex">
+		precision highp float;
+		
+        uniform mat4 modelViewMatrix;
+		uniform mat4 projectionMatrix;
+
+		attribute vec3 position;
+		attribute vec2 uv;
+		
+        varying vec2 vUv;
+
+		void main() {
+			vec3 vPosition = position;
+			vUv = uv;
+
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( vPosition, 1.0 );
+		}
+
+	</script>
+
+	<script id="fragmentShader" type="x-shader/x-fragment">
+		precision highp float;
+
+		uniform sampler2D map;
+
+		varying vec2 vUv;
+
+		void main() {
+
+			gl_FragColor = texture2D(map, vUv);
+
+		}
+
+	</script>
+    <script>
+        var model, modelMesh;
+        var canvas = document.getElementById("webglcanvas");
+        var renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 0.0001, 4000 );
+        
+        
+        var makeMesh = function(vertsPtr, uvsPtr, facesPtr, vertCount, triCount){
+                
+    
+    
+                console.log('vertsPtr : ',vertsPtr);
+                console.log('uvsPtr : ',uvsPtr);
+                console.log('facesPtr : ',facesPtr);
+                console.log('vertCount : ',vertCount);
+                console.log('triCount : ',triCount);
+            
+                verts = new Float32Array(Module.HEAPF32.buffer, vertsPtr, vertCount*3);
+                uvs = new Float32Array(Module.HEAPF32.buffer, uvsPtr, vertCount*2);                
+                faces = new Uint16Array(Module.HEAPU16.buffer, facesPtr, triCount*3);
+                
+                model = new THREE.BufferGeometry();
+                model.addAttribute( 'position', new THREE.BufferAttribute( verts, 3 ) );
+                model.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
+                model.setIndex( new THREE.BufferAttribute(faces,1));
+
+//                THREE.ImageUtils.crossOrigin = '';
+//                texture = THREE.ImageUtils.loadTexture( 'https://s3-ap-northeast-1.amazonaws.com/realityreflection/aaa/final.jpg' );
+//			    texture.anisotropy = renderer.getMaxAnisotropy();
+//
+//                modelMaterial = new THREE.RawShaderMaterial( {
+//				        uniforms: {
+//					       map: { type: "t", value: texture }
+//				        },
+//				        vertexShader: document.getElementById( 'vertexShader' ).textContent,
+//				        fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+//				        side: THREE.DoubleSide,
+//				        transparent: false
+//			     } );
+            
+            
+                var loader = new THREE.TextureLoader();
+                loader.crossOrigin = '';
+                loader.load(
+	               'https://s3-ap-northeast-1.amazonaws.com/realityreflection/aaa/final.jpg'',
+	               function ( texture ) {
+                        texture.anisotropy = renderer.getMaxAnisotropy();
+
+                        modelMaterial = new THREE.RawShaderMaterial( {
+				            uniforms: {
+					           map: { type: "t", value: texture }
+				            },
+				            vertexShader: document.getElementById( 'vertexShader' ).textContent,
+				            fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+				            side: THREE.DoubleSide,
+				            transparent: false
+			             } );
+                    
+                    
+                        modelMesh = new THREE.Mesh( model, modelMaterial );
+                        scene.add(modelMesh);
+                
+                        end_o = Date.now();
+                        console.log('All Done Time : ', end_o - start_o);
+                
+            
+                        modelMesh.scale.x = -0.192;
+                        modelMesh.scale.y = -0.192;
+                        modelMesh.scale.z = -0.192;
+                
+                        camera.lookAt(modelMesh);
+                    
+	               },
+	
+                    function ( xhr ) {
+                        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+                    },
+	
+                    function ( xhr ) {
+                        console.log( 'An error happened' );
+                    }
+                );
+            
+                
+//            
+//            
+//            
+//            
+//                modelMesh = new THREE.Mesh( model, modelMaterial );
+//                scene.add(modelMesh);
+//                
+//                end_o = Date.now();
+//                console.log('All Done Time : ', end_o - start_o);
+//                
+//            
+//                modelMesh.scale.x = -0.192;
+//                modelMesh.scale.y = -0.192;
+//                modelMesh.scale.z = -0.192;
+//                
+//                camera.lookAt(modelMesh);
+        }
+        
+        
+        renderer.setSize(canvas.width, canvas.height);
+        scene.add(camera);
+        
+        //cube
+        var material = new THREE.MeshBasicMaterial();
+        var geometry = new THREE.CubeGeometry(2, 2, 2);
+        var cube = new THREE.Mesh(geometry, material);
+        cube.position.z = -8;
+        cube.rotation.x = Math.PI / 5;
+        cube.rotation.y = Math.PI / 5;
+        
+//        scene.add( cube );
+        
+        
+        
+        //buffer geometry
+
+        var geometry = new THREE.BufferGeometry();
+// create a simple square shape. We duplicate the top left and bottom right
+// vertices because each vertex needs to appear once per triangle.
+var vertexPositions = [
+	[-1.0, -1.0,  1.0],
+	[ 1.0, -1.0,  1.0],
+	[ 1.0,  1.0,  1.0],
+
+	[ 1.0,  1.0,  1.0],
+	[-1.0,  1.0,  1.0],
+	[-1.0, -1.0,  1.0]
+];
+var vertices = new Float32Array( vertexPositions.length * 3 ); // three components per vertex
+
+// components of the position vector for each vertex are stored
+// contiguously in the buffer.
+for ( var i = 0; i < vertexPositions.length; i++ )
+{
+	vertices[ i*3 + 0 ] = vertexPositions[i][0];
+	vertices[ i*3 + 1 ] = vertexPositions[i][1];
+	vertices[ i*3 + 2 ] = vertexPositions[i][2];
+}
+
+// itemSize = 3 because there are 3 values (components) per vertex
+geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+mesh = new THREE.Mesh( geometry, material );
+          mesh.position.z = -8;
+        mesh.rotation.x = Math.PI / 5;
+        mesh.rotation.y = Math.PI / 5;
+//        scene.add(mesh);
+//        camera.lookAt(mesh);
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        //func. render
+        function render() {
+        requestAnimationFrame(function() { render(); });
+			renderer.render( scene, camera );
+			animate();
+        }
+        //func. animate
+        function animate() {
+//            mesh.scale.x += 0.001;
+//            mesh.scale.y += 0.001;
+//            mesh.scale.z += 0.001;
+//	       if(modelMesh != undefined){
+//               console.log('modelMesh!!');
+//               modelMesh.scale.x -= 0.001;
+//               modelMesh.scale.y -= 0.001;
+//               modelMesh.scale.z -= 0.001;
+//           }
+	   }
+        render();
+    </script>
+    <script src="obj_loader.js"></script>
+    <script>
+        var readMesh = Module.cwrap('readMesh','number',['string']);
+        
+    </script>
+</html>

@@ -9,7 +9,22 @@
 #include "objSerializer.h"
 
 
-float ** readMesh(char * filePath){
+void successLoadMeshFromUrl(char * file){
+    readMesh(file);
+}
+
+void fail(char * file){
+    printf("error : %s\n",file);
+}
+
+int readMeshFromUrl(char * url, char * fileName){
+    em_str_callback_func suCallback = &successLoadMeshFromUrl;
+    em_str_callback_func faCallback = &fail;
+    emscripten_async_wget(url,fileName,suCallback,faCallback);
+    return 0;
+}
+
+void readMesh(char * filePath){
     printf("filePath : %s\n",filePath);
     int i = 0;
     FILE * fp;
@@ -17,13 +32,11 @@ float ** readMesh(char * filePath){
     uint16_t triCount;
     uint8_t format;
 
-    
-    float ** result = (float **)malloc(sizeof(float*)*5);
     float * verts;
     float * normals;
     float * tangents;
     float * uvs;
-    float * tris;
+    uint16_t * tris;
     
 
     fp = fopen(filePath, "rb");
@@ -37,60 +50,67 @@ float ** readMesh(char * filePath){
         
         if(vertCount < 0 || vertCount > 65535){
             printf("Invalid vertex count in the mesh data!\n");
-            return -1;
+            return;
         }
         if(triCount < 0 || vertCount > 65535){
             printf("Invalid triangle count in the mesh data!\n");
-            return -1;
+            return;
         }
         if(format < 1 || (format&1) == 0 || format > 15){
             printf("Invalid vertex format in the mesh data!\n");
-            return -1;
+            return;
         }
         
         
         //var mesh = new Mesh(); //emscripten으로 Three.js obj만드는부분
         
         verts = malloc(sizeof(float)*vertCount*3);
-        result[0] = verts;
         readVector3Array16bit(&verts, fp, vertCount);
 
-        //mesh.vertices = verts
         
         if(format & 2){ //have normals
             normals = malloc(sizeof(float)*vertCount*3);
-            result[1] = normals;
             readVector3ArrayBytes(&normals, fp, vertCount);
         }
-        
+
+
         if(format & 4){ //have tangents
             tangents  = malloc((sizeof(float)*vertCount*4));
-            result[2] = tangents;
             readVector4ArrayBytes(&tangents, fp, vertCount);
         }
         
         if(format & 8){ // have uvs
             uvs = malloc(sizeof(float)*vertCount*2);
-            result[3] = uvs;
             readVector2Array16bit(&uvs, fp, vertCount);
         }
-
+        
         //triangle indices
-        tris = malloc(sizeof(int)*triCount*3);
-        result[4] = tris;
+        tris = malloc(sizeof(uint16_t)*triCount*3);
+        
         for( i = 0 ; i < triCount ; i++){
-            fread(&(tris[i*3+0]), sizeof(uint16_t), 3, fp);
+            fread(&(tris[i*3]), sizeof(uint16_t), 3, fp);
         }
-
+       
         
-        
+        EM_ASM_ARGS({ makeMesh($0,$1,$2,$3,$4); }, verts, uvs, tris, vertCount, triCount);
+        if(verts != NULL){
+            free(verts);
+        }
+        if(uvs != NULL){
+            free(uvs);
+        }
+        if(tris != NULL){
+            free(tris);
+        }
+        if(normals != NULL){
+            free(normals);
+        }
         fclose(fp);
     }
     else{
         printf("Can't read the file!\n");
-        return -1;
     }
-    return result;
+    return;
 }
 
 int readVector2Array16bit (float ** arr, FILE * fp, int arrLength){
@@ -108,9 +128,9 @@ int readVector2Array16bit (float ** arr, FILE * fp, int arrLength){
     fread(&bmaxX, sizeof(float), 1, fp);
     fread(&bminY, sizeof(float), 1, fp);
     fread(&bmaxY, sizeof(float), 1, fp);
-    
+
     for( ; i < arrLength ; i++){
-        fread(is, sizeof(uint16_t), 3, fp);
+        fread(is, sizeof(uint16_t), 2, fp);
         xx = is[0] / 65535.0 * (bmaxX -bminX) + bminX;
         yy = is[1] / 65535.0 * (bmaxY -bminY) + bminY;
 
@@ -162,10 +182,10 @@ int readVector3ArrayBytes (float ** arr, FILE * fp, int arrLength){
     if(fp == NULL){
         return -1;
     }
-    int is[3];
+    uint8_t is[3];
     float xx, yy, zz;
     for(int i = 0 ; i < arrLength ; i++){
-        fread(is, sizeof(uint32_t), 3, fp);
+        fread(is, sizeof(uint8_t), 3, fp);
         xx = (is[0] - 128.0) / 127.0;
         yy = (is[1] - 128.0) / 127.0;
         zz = (is[2] - 128.0) / 127.0;
@@ -181,10 +201,10 @@ int readVector4ArrayBytes (float ** arr, FILE * fp, int arrLength){
     if(fp == NULL){
         return -1;
     }
-    int is[4];
+    uint8_t is[4];
     float xx, yy, zz, ww;
     for(int i = 0 ; i < arrLength ; i++){
-        fread(is, sizeof(uint32_t), 3, fp);
+        fread(is, sizeof(uint8_t), 4, fp);
         xx = (is[0] - 128.0) / 127.0;
         yy = (is[1] - 128.0) / 127.0;
         zz = (is[2] - 128.0) / 127.0;
