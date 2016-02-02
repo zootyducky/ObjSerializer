@@ -8,24 +8,42 @@
 
 #include "objSerializer.h"
 
-
 void successLoadMeshFromUrl(char * file){
-    readMesh(file);
+    readMesh(file, 0);
 }
 
 void fail(char * file){
     printf("error : %s\n",file);
 }
 
-int readMeshFromUrl(char * url, char * fileName){
-    em_str_callback_func suCallback = &successLoadMeshFromUrl;
-    em_str_callback_func faCallback = &fail;
-    emscripten_async_wget(url,fileName,suCallback,faCallback);
+void onLoadCallback(void * arg, char * file){
+    int * idx = (int *)arg;
+    readMesh(file, idx[0]);
+}
+
+void onErrorCallback(void * arg, int status){
+    printf("Error Occured!!\n");
+}
+
+void onProgressCallback(void * arg, int prgresPercent){
+    
+}
+
+int readMeshFromUrl(char * url, char * fileName, int idx){
+
+    char * requestType = "GET";
+    void * arg = &idx;
+    em_async_wget2_onload_func onLoad = &onLoadCallback;
+    em_async_wget2_onstatus_func onError = &onErrorCallback;
+    em_async_wget2_onstatus_func onProgress = &onProgressCallback;
+    emscripten_async_wget2(url, fileName, requestType, NULL, arg, onLoad, onError, onProgress);
+//    em_str_callback_func suCallback = &successLoadMeshFromUrl;
+//    em_str_callback_func faCallback = &fail;
+//    emscripten_async_wget(url,fileName,suCallback,faCallback);
     return 0;
 }
 
-void readMesh(char * filePath){
-    printf("filePath : %s\n",filePath);
+void readMesh(char * filePath, int idx){
     int i = 0;
     FILE * fp;
     uint16_t vertCount;
@@ -37,16 +55,12 @@ void readMesh(char * filePath){
     float * tangents;
     float * uvs;
     uint16_t * tris;
-    
 
     fp = fopen(filePath, "rb");
     if (fp){
         fread(&vertCount, sizeof(uint16_t), 1, fp);
         fread(&triCount, sizeof(uint16_t), 1, fp);
         fread(&format, sizeof(uint8_t), 1, fp);
-        printf("vertCount = %u\n",vertCount);
-        printf("triCount = %u\n",triCount);
-        printf("format = %d\n",format);
         
         if(vertCount < 0 || vertCount > 65535){
             printf("Invalid vertex count in the mesh data!\n");
@@ -92,7 +106,7 @@ void readMesh(char * filePath){
         }
        
         
-        EM_ASM_ARGS({ makeMesh($0,$1,$2,$3,$4); }, verts, uvs, tris, vertCount, triCount);
+        EM_ASM_ARGS({ callbackAfterGetMeshData($0,$1,$2,$3,$4,$5); }, verts, uvs, tris, vertCount, triCount, idx);
         if(verts != NULL){
             free(verts);
         }

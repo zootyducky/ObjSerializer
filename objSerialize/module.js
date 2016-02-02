@@ -1,0 +1,1 @@
+var Module = {locateFile : function(x){return "/VROPlayer/controller/"+x;},onRuntimeInitialized : allReady};
