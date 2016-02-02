@@ -7,15 +7,6 @@
 //
 
 #include "objSerializer.h"
-
-void successLoadMeshFromUrl(char * file){
-    readMesh(file, 0);
-}
-
-void fail(char * file){
-    printf("error : %s\n",file);
-}
-
 void onLoadCallback(void * arg, char * file){
     int * idx = (int *)arg;
     readMesh(file, idx[0]);
@@ -30,16 +21,12 @@ void onProgressCallback(void * arg, int prgresPercent){
 }
 
 int readMeshFromUrl(char * url, char * fileName, int idx){
-
-    char * requestType = "GET";
+    char * method = "GET";
     void * arg = &idx;
     em_async_wget2_onload_func onLoad = &onLoadCallback;
     em_async_wget2_onstatus_func onError = &onErrorCallback;
     em_async_wget2_onstatus_func onProgress = &onProgressCallback;
-    emscripten_async_wget2(url, fileName, requestType, NULL, arg, onLoad, onError, onProgress);
-//    em_str_callback_func suCallback = &successLoadMeshFromUrl;
-//    em_str_callback_func faCallback = &fail;
-//    emscripten_async_wget(url,fileName,suCallback,faCallback);
+    emscripten_async_wget2(url,fileName,method,NULL,arg,onLoad,onError,onProgress);
     return 0;
 }
 

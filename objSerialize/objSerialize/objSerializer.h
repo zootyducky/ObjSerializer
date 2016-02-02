@@ -17,8 +17,6 @@
 
 
 //EM_ASM_ARGS({ my_js_fn($0, $1); }, i, max);
-void successLoadMeshFromUrl(char * file);
-void fail(char * file);
 void onLoadCallback(void * arg, char * file);
 void onErrorCallback(void * arg, int status);
 void onProgressCallback(void * arg, int status);
