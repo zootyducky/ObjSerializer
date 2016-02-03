@@ -7,42 +7,35 @@
 //
 
 #include "objSerializer.h"
-void onLoadCallback(void * arg, char * file){
-    int * idx = (int *)arg;
-    readMesh(file, idx[0]);
+
+void successLoadMeshFromUrl(char * file){
+    readMesh(file);
 }
 
-void onErrorCallback(void * arg, int status){
-    printf("Error Occured!!\n");
+void fail(char * file){
+    printf("error : %s\n",file);
 }
 
-void onProgressCallback(void * arg, int prgresPercent){
-    
-}
-
-int readMeshFromUrl(char * url, char * fileName, int idx){
-    char * method = "GET";
-    void * arg = &idx;
-    em_async_wget2_onload_func onLoad = &onLoadCallback;
-    em_async_wget2_onstatus_func onError = &onErrorCallback;
-    em_async_wget2_onstatus_func onProgress = &onProgressCallback;
-    emscripten_async_wget2(url,fileName,method,NULL,arg,onLoad,onError,onProgress);
+int readMeshFromUrl(char * url, char * fileName){
+    em_str_callback_func suCallback = &successLoadMeshFromUrl;
+    em_str_callback_func faCallback = &fail;
+    emscripten_async_wget(url,fileName,suCallback,faCallback);
     return 0;
 }
 
-void readMesh(char * filePath, int idx){
+void readMesh(char * filePath){
     int i = 0;
     FILE * fp;
     uint16_t vertCount;
     uint16_t triCount;
     uint8_t format;
-
+    
     float * verts;
     float * normals;
     float * tangents;
     float * uvs;
     uint16_t * tris;
-
+    
     fp = fopen(filePath, "rb");
     if (fp){
         fread(&vertCount, sizeof(uint16_t), 1, fp);
@@ -67,14 +60,14 @@ void readMesh(char * filePath, int idx){
         
         verts = malloc(sizeof(float)*vertCount*3);
         readVector3Array16bit(&verts, fp, vertCount);
-
+        
         
         if(format & 2){ //have normals
             normals = malloc(sizeof(float)*vertCount*3);
             readVector3ArrayBytes(&normals, fp, vertCount);
         }
-
-
+        
+        
         if(format & 4){ //have tangents
             tangents  = malloc((sizeof(float)*vertCount*4));
             readVector4ArrayBytes(&tangents, fp, vertCount);
@@ -91,9 +84,9 @@ void readMesh(char * filePath, int idx){
         for( i = 0 ; i < triCount ; i++){
             fread(&(tris[i*3]), sizeof(uint16_t), 3, fp);
         }
-       
         
-        EM_ASM_ARGS({ callbackAfterGetMeshData($0,$1,$2,$3,$4,$5); }, verts, uvs, tris, vertCount, triCount, idx);
+       	int idx = atoi(filePath);
+        EM_ASM_ARGS({ callbackAfterGetMeshData($0,$1,$2,$3,$4,$5); }, verts, uvs, tris, vertCount, triCount,idx);
         fclose(fp);
     }
     else{
@@ -117,12 +110,12 @@ int readVector2Array16bit (float ** arr, FILE * fp, int arrLength){
     fread(&bmaxX, sizeof(float), 1, fp);
     fread(&bminY, sizeof(float), 1, fp);
     fread(&bmaxY, sizeof(float), 1, fp);
-
+    
     for( ; i < arrLength ; i++){
         fread(is, sizeof(uint16_t), 2, fp);
         xx = is[0] / 65535.0 * (bmaxX -bminX) + bminX;
         yy = is[1] / 65535.0 * (bmaxY -bminY) + bminY;
-
+        
         (*arr)[i*2 + 0] = xx;
         (*arr)[i*2 + 1] = yy;
     }

@@ -17,11 +17,11 @@
 
 
 //EM_ASM_ARGS({ my_js_fn($0, $1); }, i, max);
-void onLoadCallback(void * arg, char * file);
-void onErrorCallback(void * arg, int status);
-void onProgressCallback(void * arg, int status);
-int readMeshFromUrl(char * url, char * fileName, int idx);
-void readMesh(char * filePath, int idx);
+
+void successLoadMeshFromUrl(char * file);
+void fail(char * file);
+int readMeshFromUrl(char * url, char * fileName);
+void readMesh(char * filePath);
 int readVector2Array16bit (float ** arr, FILE * fp, int arrLength);
 int readVector3Array16bit (float ** arr, FILE * fp, int arrLength);
 int readVector3ArrayBytes (float ** arr, FILE * fp, int arrLength);
