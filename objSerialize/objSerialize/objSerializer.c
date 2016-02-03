@@ -94,18 +94,6 @@ void readMesh(char * filePath, int idx){
        
         
         EM_ASM_ARGS({ callbackAfterGetMeshData($0,$1,$2,$3,$4,$5); }, verts, uvs, tris, vertCount, triCount, idx);
-        if(verts != NULL){
-            free(verts);
-        }
-        if(uvs != NULL){
-            free(uvs);
-        }
-        if(tris != NULL){
-            free(tris);
-        }
-        if(normals != NULL){
-            free(normals);
-        }
         fclose(fp);
     }
     else{
