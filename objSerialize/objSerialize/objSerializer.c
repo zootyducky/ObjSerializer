@@ -86,7 +86,7 @@ void readMesh(char * filePath){
         }
         
        	int idx = atoi(filePath);
-        EM_ASM_ARGS({ callbackAfterGetMeshData($0,$1,$2,$3,$4,$5); }, verts, uvs, tris, vertCount, triCount,idx);
+        EM_ASM_ARGS({ callbackAfterGetMeshData($0,$1,$2,$3,$4,$5); }, verts, uvs, tris, vertCount, triCount, idx);
         fclose(fp);
     }
     else{
